@@ -24,14 +24,16 @@ const chainIds = {
 };
 
 // Ensure that we have all the environment variables we need.
-const mnemonic: string | undefined = process.env.MNEMONIC;
+let mnemonic: string | undefined = process.env.MNEMONIC;
 if (!mnemonic) {
-  throw new Error("Please set your MNEMONIC in a .env file");
+  console.warn("MNEMONIC is not set in the .env file");
+  mnemonic =
+    "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
 }
 
 const infuraApiKey: string | undefined = process.env.INFURA_API_KEY;
 if (!infuraApiKey) {
-  throw new Error("Please set your INFURA_API_KEY in a .env file");
+  console.warn("INFURA_API_KEY is not set in the .env file");
 }
 
 function getChainConfig(network: keyof typeof chainIds): NetworkUserConfig {
@@ -74,7 +76,7 @@ const config: HardhatUserConfig = {
     tests: "./test",
   },
   solidity: {
-    version: "0.8.9",
+    version: "0.8.12",
     settings: {
       metadata: {
         // Not including the metadata hash
@@ -85,7 +87,7 @@ const config: HardhatUserConfig = {
       // https://hardhat.org/hardhat-network/#solidity-optimizer-support
       optimizer: {
         enabled: true,
-        runs: 800,
+        runs: 200,
       },
     },
   },
