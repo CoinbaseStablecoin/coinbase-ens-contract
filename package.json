@@ -1,6 +1,7 @@
 {
-  "name": "minting",
+  "name": "coinbase-ens-contract",
   "private": true,
+  "license": "Apache-2.0",
   "version": "1.0.0",
   "devDependencies": {
     "@codechecks/client": "^0.1.12",
