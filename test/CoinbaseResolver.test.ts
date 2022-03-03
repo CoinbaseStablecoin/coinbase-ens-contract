@@ -1,17 +1,23 @@
-import { artifacts, ethers, waffle } from "hardhat";
+import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import type { CoinbaseResolver } from "../src/types/CoinbaseResolver";
 import { encode } from "../src/dnsname";
 import { expect } from "chai";
-import { abi as resolverABI } from "@ensdomains/ens-contracts/artifacts/contracts/resolvers/Resolver.sol/Resolver.json";
-import { abi as resolverServiceABI } from "../artifacts/contracts/ens-offchain-resolver/IResolverService.sol/IResolverService.json";
-import { abi as IExtendedResolverABI } from "../artifacts/contracts/ens-offchain-resolver/IExtendedResolver.sol/IExtendedResolver.json";
-import { BytesLike, Wallet } from "ethers";
+import { BytesLike, utils, Wallet } from "ethers";
 import { SigningKey } from "ethers/lib/utils";
+import {
+  ERC1967Proxy,
+  IExtendedResolver__factory,
+  IResolverService__factory,
+  Resolver__factory,
+} from "../src/types";
+import { DummyUpgradeable } from "../src/types/DummyUpgradeable";
+import { DummyUpgradeable__factory } from "../src/types/factories/DummyUpgradeable__factory";
 
-const iResolver = new ethers.utils.Interface(resolverABI);
-const iResolverService = new ethers.utils.Interface(resolverServiceABI);
-const iExtendedResolver = new ethers.utils.Interface(IExtendedResolverABI);
+const iResolver = Resolver__factory.createInterface();
+const iResolverService = IResolverService__factory.createInterface();
+const iExtendedResolver = IExtendedResolver__factory.createInterface();
+const iDummyUpgradeable = DummyUpgradeable__factory.createInterface();
 
 describe("CoinbaseResolver", () => {
   const url = "https://example.com/r/{sender}/{data}";
@@ -22,19 +28,29 @@ describe("CoinbaseResolver", () => {
   let user: SignerWithAddress;
   let user2: SignerWithAddress;
 
+  let implementation: CoinbaseResolver;
+  let proxy: ERC1967Proxy;
   let resolver: CoinbaseResolver;
 
   before(async () => {
     signer = ethers.Wallet.createRandom().connect(ethers.provider);
     [deployer, owner, user, user2] = await ethers.getSigners();
+
+    await deployer.sendTransaction({
+      to: signer.address,
+      value: ethers.utils.parseEther("1"),
+    });
   });
 
   beforeEach(async () => {
-    const resolverArtifact = await artifacts.readArtifact("CoinbaseResolver");
+    const resolverFactory = await ethers.getContractFactory("CoinbaseResolver");
+    const proxyFactory = await ethers.getContractFactory("ERC1967Proxy");
 
-    resolver = <CoinbaseResolver>(
-      await waffle.deployContract(deployer, resolverArtifact)
-    );
+    implementation = await resolverFactory.connect(deployer).deploy();
+    proxy = await proxyFactory
+      .connect(deployer)
+      .deploy(implementation.address, "0x");
+    resolver = await ethers.getContractAt("CoinbaseResolver", proxy.address);
   });
 
   describe(".initialize", () => {
@@ -164,17 +180,18 @@ describe("CoinbaseResolver", () => {
     describe("resolution", () => {
       const name = "pete.eth";
       const dnsName = encode(name);
-      const addrCallData = iResolver.encodeFunctionData("addr(bytes32)", [
-        ethers.utils.namehash(name),
-      ]);
+      const addrCallData = (iResolver as utils.Interface).encodeFunctionData(
+        "addr(bytes32)",
+        [ethers.utils.namehash(name)]
+      );
       const addrCallResultData = iResolver.encodeFunctionResult(
         "addr(bytes32)",
         [ethers.Wallet.createRandom().address]
       );
-      const requestCallData = iResolverService.encodeFunctionData(
-        "resolve(bytes,bytes)",
-        [dnsName, addrCallData]
-      );
+      const requestCallData = iResolverService.encodeFunctionData("resolve", [
+        dnsName,
+        addrCallData,
+      ]);
 
       describe(".resolve", () => {
         it("reverts with an OffchainLookup error", async () => {
@@ -266,6 +283,71 @@ describe("CoinbaseResolver", () => {
           await expect(
             resolver.resolveWithProof(responseData, requestCallData)
           ).to.be.revertedWith("invalid signature");
+        });
+      });
+    });
+
+    describe("upgradeability", () => {
+      let dummyImpl: DummyUpgradeable;
+      let proxyAsDummy: DummyUpgradeable;
+
+      beforeEach(async () => {
+        const dummyFactory = await ethers.getContractFactory(
+          "DummyUpgradeable"
+        );
+
+        dummyImpl = await dummyFactory.connect(deployer).deploy();
+        proxyAsDummy = await ethers.getContractAt(
+          "DummyUpgradeable",
+          proxy.address
+        );
+      });
+
+      describe(".implementation", () => {
+        it("returns the implementation address", async () => {
+          expect(await resolver.implementation()).to.equal(
+            implementation.address
+          );
+        });
+
+        it("reverts if called on the implementation contract itself", async () => {
+          await expect(implementation.implementation()).to.be.reverted;
+        });
+      });
+
+      describe(".upgradeTo", () => {
+        it("is disabled in favor of .upgradeToAndCall", async () => {
+          await expect(
+            resolver.connect(owner).upgradeTo(dummyImpl.address)
+          ).to.be.revertedWith("disabled");
+        });
+      });
+
+      describe(".upgradeToAndCall", () => {
+        it("lets the owner update the implementation", async () => {
+          await expect(
+            resolver
+              .connect(owner)
+              .upgradeToAndCall(
+                dummyImpl.address,
+                iDummyUpgradeable.encodeFunctionData("setValue", [42069])
+              )
+          ).not.to.be.reverted;
+
+          expect(await proxyAsDummy.implementation()).to.equal(
+            dummyImpl.address
+          );
+          expect(await proxyAsDummy.value()).to.equal(42069);
+        });
+
+        it("does not allow a non-owner to update the implementation", async () => {
+          for (const account of [deployer, signer, user, user2]) {
+            await expect(
+              resolver
+                .connect(account)
+                .upgradeToAndCall(dummyImpl.address, "0x")
+            ).to.be.revertedWith("caller is not the owner");
+          }
         });
       });
     });

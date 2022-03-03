@@ -2,8 +2,9 @@
 
 pragma solidity 0.8.12;
 
+import { UUPSUpgradeable } from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Ownable } from "./openzeppelin/Ownable.sol";
 import { IExtendedResolver } from "./ens-offchain-resolver/IExtendedResolver.sol";
 import { SignatureVerifier } from "./ens-offchain-resolver/SignatureVerifier.sol";
 import { IResolverService } from "./ens-offchain-resolver/IResolverService.sol";
@@ -12,7 +13,12 @@ import { IResolverService } from "./ens-offchain-resolver/IResolverService.sol";
  * @notice Coinbase Offchain ENS Resolver
  * @dev Adapted from: https://github.com/ensdomains/offchain-resolver/blob/2bc616f19a94370828c35f29f71d5d4cab3a9a4f/packages/contracts/contracts/OffchainResolver.sol
  */
-contract CoinbaseResolver is ERC165, Ownable, IExtendedResolver {
+contract CoinbaseResolver is
+    UUPSUpgradeable,
+    Ownable,
+    ERC165,
+    IExtendedResolver
+{
     bool private _initialized;
     string private _url;
     mapping(address => bool) private _signers;
@@ -64,6 +70,14 @@ contract CoinbaseResolver is ERC165, Ownable, IExtendedResolver {
      */
     function isSigner(address account) external view returns (bool) {
         return _signers[account];
+    }
+
+    /**
+     * @notice Returns the implementation address.
+     * @return Implementation address
+     */
+    function implementation() external view onlyProxy returns (address) {
+        return _getImplementation();
     }
 
     /**
@@ -196,5 +210,18 @@ contract CoinbaseResolver is ERC165, Ownable, IExtendedResolver {
             _signers[signersToAdd[i]] = true;
         }
         emit SignersAdded(signersToAdd);
+    }
+
+    /**
+     * @dev Upgrades can only be performed by the owner
+     */
+    // solhint-disable-next-line no-empty-blocks
+    function _authorizeUpgrade(address) internal override onlyOwner {}
+
+    /**
+     * @dev Disabled. Use .upgradeToAndCall instead.
+     */
+    function upgradeTo(address) external view override onlyProxy {
+        revert("disabled");
     }
 }

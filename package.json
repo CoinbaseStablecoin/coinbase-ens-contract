@@ -70,6 +70,6 @@
   },
   "dependencies": {
     "@ensdomains/ens-contracts": "^0.0.8",
-    "@openzeppelin/contracts": "^4.4.2"
+    "@openzeppelin/contracts": "^4.5.0"
   }
 }

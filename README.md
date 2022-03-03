@@ -25,6 +25,9 @@ Client                             Offchain Resolver Contract          Gateway
 Please refer to the tests for `.resolve` and `.resolveWithProof` in
 `CoinbaseResolver.test.ts` to learn more about how this works.
 
+CoinbaseResolver conforms to [EIP-1967](https://eips.ethereum.org/EIPS/eip-1967)
+and [EIP-1822](https://eips.ethereum.org/EIPS/eip-1822) for upgradeability.
+
 ## Usage
 
 ### Compile
