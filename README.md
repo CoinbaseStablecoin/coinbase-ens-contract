@@ -69,3 +69,10 @@ Run the Mocha tests:
 ```sh
 $ yarn test
 ```
+
+## Deployment
+
+```sh
+$ hardhat typechain
+$ hardhat deploy:CoinbaseResolver --network <NETWORK>
+```
