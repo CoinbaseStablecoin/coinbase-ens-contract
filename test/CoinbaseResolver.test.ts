@@ -119,7 +119,7 @@ describe("CoinbaseResolver", () => {
       });
     });
 
-    describe(".isSigner/.addSigners/.removeSigners", () => {
+    describe(".signers/.isSigner/.addSigners/.removeSigners", () => {
       it("lets the owner add and remove signers", async () => {
         for (const account of [user, user2]) {
           expect(await resolver.isSigner(account.address)).to.be.false;
@@ -129,15 +129,22 @@ describe("CoinbaseResolver", () => {
           resolver.connect(owner).addSigners([user.address, user2.address])
         ).not.to.be.reverted;
 
+        let signers = await resolver.signers();
+        expect(signers).to.have.lengthOf(3);
+
         for (const account of [signer, user, user2]) {
           expect(await resolver.isSigner(account.address)).to.be.true;
+          expect(signers).to.contain(account.address);
         }
 
         await expect(
           resolver.connect(owner).removeSigners([user.address, user2.address])
         ).not.to.be.reverted;
 
+        signers = await resolver.signers();
+        expect(signers).to.eql([signer.address]);
         expect(await resolver.isSigner(signer.address)).to.be.true;
+
         for (const account of [user, user2]) {
           expect(await resolver.isSigner(account.address)).to.be.false;
         }

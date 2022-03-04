@@ -4,6 +4,7 @@ pragma solidity 0.8.12;
 
 import { UUPSUpgradeable } from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { Ownable } from "./openzeppelin/Ownable.sol";
 import { IExtendedResolver } from "./ens-offchain-resolver/IExtendedResolver.sol";
 import { SignatureVerifier } from "./ens-offchain-resolver/SignatureVerifier.sol";
@@ -19,9 +20,11 @@ contract CoinbaseResolver is
     ERC165,
     IExtendedResolver
 {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
     bool private _initialized;
     string private _url;
-    mapping(address => bool) private _signers;
+    EnumerableSet.AddressSet private _signers;
 
     event UrlSet(string indexed newUrl);
     event SignersAdded(address[] indexed addedSigners);
@@ -65,11 +68,19 @@ contract CoinbaseResolver is
     }
 
     /**
+     * @notice Returns a list of signers.
+     * @return List of signers
+     */
+    function signers() external view returns (address[] memory) {
+        return _signers.values();
+    }
+
+    /**
      * @notice Returns whether a given account is a signer.
      * @return True if a given account is a signer.
      */
     function isSigner(address account) external view returns (bool) {
-        return _signers[account];
+        return _signers.contains(account);
     }
 
     /**
@@ -109,7 +120,7 @@ contract CoinbaseResolver is
         onlyOwner
     {
         for (uint256 i = 0; i < signersToRemove.length; i++) {
-            delete _signers[signersToRemove[i]];
+            _signers.remove(signersToRemove[i]);
         }
         emit SignersRemoved(signersToRemove);
     }
@@ -175,7 +186,7 @@ contract CoinbaseResolver is
             extraData,
             response
         );
-        require(_signers[signer], "invalid signature");
+        require(_signers.contains(signer), "invalid signature");
         return result;
     }
 
@@ -207,7 +218,7 @@ contract CoinbaseResolver is
 
     function _addSigners(address[] memory signersToAdd) private {
         for (uint256 i = 0; i < signersToAdd.length; i++) {
-            _signers[signersToAdd[i]] = true;
+            _signers.add(signersToAdd[i]);
         }
         emit SignersAdded(signersToAdd);
     }
