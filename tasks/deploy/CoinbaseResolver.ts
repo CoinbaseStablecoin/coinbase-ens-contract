@@ -9,12 +9,32 @@ task("deploy:CoinbaseResolver").setAction(
     const resolverFactory = await ethers.getContractFactory("CoinbaseResolver");
     const proxyFactory = await ethers.getContractFactory("ERC1967Proxy");
 
+    console.log("deploying implementation contract...");
     const implementation = await resolverFactory.deploy();
-    await implementation.initialize(ethers.constants.AddressZero, "", []);
     await implementation.deployed();
-    console.log("Implementation contract deployed at:", implementation.address);
+    console.log(
+      "-> deployed implementation contract at",
+      implementation.address
+    );
+
+    console.log("initializing implementation contract with dummy values...");
+    await implementation.initialize(ethers.constants.AddressZero, "", []);
+    console.log("-> initialized implementation contract");
 
     const iCoinbaseResolver = CoinbaseResolver__factory.createInterface();
+
+    const proxyArgs = [
+      implementation.address,
+      iCoinbaseResolver.encodeFunctionData("initialize", [
+        deployer.address,
+        "http://localhost:3000/r/{sender}/{data}",
+        [deployer.address],
+      ]),
+    ];
+
+    console.log(
+      `deploying proxy contract (arguments: ${JSON.stringify(proxyArgs)})...`
+    );
     const proxy = await proxyFactory.deploy(
       implementation.address,
       iCoinbaseResolver.encodeFunctionData("initialize", [
@@ -23,19 +43,7 @@ task("deploy:CoinbaseResolver").setAction(
         [deployer.address],
       ])
     );
-
     await proxy.deployed();
-    console.log("Proxy contract deployed at:", proxy.address);
-
-    // validate that the implementation address on the proxy matches the
-    // implementation address
-    const proxyAsResolver = await ethers.getContractAt(
-      "CoinbaseResolver",
-      proxy.address
-    );
-
-    if ((await proxyAsResolver.implementation()) != implementation.address) {
-      throw new Error("the proxy's implementation address is incorrect!");
-    }
+    console.log("-> deployed proxy contract at", proxy.address);
   }
 );
