@@ -34,11 +34,14 @@ describe("CoinbaseResolver", () => {
 
   before(async () => {
     signer = ethers.Wallet.createRandom().connect(ethers.provider);
-    [deployer, owner, user, user2] = await ethers.getSigners();
 
-    await deployer.sendTransaction({
+    let user3: SignerWithAddress;
+    [deployer, owner, user, user2, user3] = await ethers.getSigners();
+
+    // fund signer address
+    await user3.sendTransaction({
       to: signer.address,
-      value: ethers.utils.parseEther("1"),
+      value: (await user3.getBalance()).div(2),
     });
   });
 
