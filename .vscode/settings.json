@@ -1,6 +1,17 @@
 {
+  "editor.tabSize": 2,
   "prettier.configPath": ".prettierrc.json",
   "typescript.enablePromptUseWorkspaceTsdk": true,
-  "solidity.compileUsingRemoteVersion": "v0.8.12+commit.f00d7308",
-  "solidity.defaultCompiler": "remote"
+  "solidity.compileUsingRemoteVersion": "v0.8.13+commit.abaa5c0e",
+  "solidity.defaultCompiler": "remote",
+  "editor.formatOnSave": true,
+  "[solidity]": {
+    "editor.defaultFormatter": "JuanBlanco.solidity"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }
