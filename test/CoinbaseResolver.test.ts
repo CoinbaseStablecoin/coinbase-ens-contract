@@ -185,6 +185,14 @@ describe("CoinbaseResolver", () => {
           ).to.be.revertedWith("caller is not the owner");
         }
       });
+
+      it("does not allow a transfer of ownership to a zero address", async () => {
+        await expect(
+          resolver
+            .connect(owner)
+            .transferOwnership(ethers.constants.AddressZero)
+        ).to.be.revertedWith("new owner is the zero address");
+      });
     });
 
     describe("resolution", () => {
@@ -351,7 +359,11 @@ describe("CoinbaseResolver", () => {
         });
 
         it("does not allow a non-owner to update the implementation", async () => {
-          for (const account of [deployer, signer, user, user2]) {
+          // owner renounces ownership
+          await expect(resolver.connect(owner).renounceOwnership()).not.to.be
+            .reverted;
+
+          for (const account of [owner, deployer, signer, user, user2]) {
             await expect(
               resolver
                 .connect(account)
