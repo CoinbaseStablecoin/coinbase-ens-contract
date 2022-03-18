@@ -2,7 +2,7 @@
 
 // Original source: https://github.com/ensdomains/offchain-resolver/blob/2bc616f19a94370828c35f29f71d5d4cab3a9a4f/packages/contracts/contracts/SignatureVerifier.sol
 
-pragma solidity ^0.8.4;
+pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
