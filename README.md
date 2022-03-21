@@ -28,7 +28,18 @@ Please refer to the tests for `.resolve` and `.resolveWithProof` in
 CoinbaseResolver conforms to [EIP-1967](https://eips.ethereum.org/EIPS/eip-1967)
 and [EIP-1822](https://eips.ethereum.org/EIPS/eip-1822) for upgradeability.
 
+## Requirements
+
+- Node.js v16
+- Yarn v1.22.x
+
 ## Usage
+
+### Install dependencies
+
+```sh
+$ yarn install
+```
 
 ### Compile
 
@@ -46,33 +57,26 @@ Compile the smart contracts and generate TypeChain artifacts:
 $ yarn typechain
 ```
 
-### Lint Solidity
-
-Lint the Solidity code:
+### Lint
 
 ```sh
-$ yarn lint:sol
-```
-
-### Lint TypeScript
-
-Lint the TypeScript code:
-
-```sh
-$ yarn lint:ts
+$ yarn lint
 ```
 
 ### Test
-
-Run the Mocha tests:
 
 ```sh
 $ yarn test
 ```
 
-## Deployment
+### Test Coverage
 
 ```sh
-$ hardhat typechain
-$ hardhat deploy:CoinbaseResolver --network <NETWORK>
+$ yarn coverage
+```
+
+### Deployment
+
+```sh
+$ yarn deploy --network <NETWORK>
 ```

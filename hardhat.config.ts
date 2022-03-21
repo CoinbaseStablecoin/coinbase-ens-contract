@@ -4,9 +4,6 @@ import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 
-import "./tasks/accounts";
-import "./tasks/deploy";
-
 import { resolve } from "path";
 
 import { config as dotenvConfig } from "dotenv";
