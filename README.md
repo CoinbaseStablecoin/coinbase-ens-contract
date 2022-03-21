@@ -57,6 +57,12 @@ Compile the smart contracts and generate TypeChain artifacts:
 $ yarn typechain
 ```
 
+### Format
+
+```sh
+$ yarn prettier
+```
+
 ### Lint
 
 ```sh
@@ -71,8 +77,12 @@ $ yarn test
 
 ### Test Coverage
 
+Ensure test coverage is at 100%
+
 ```sh
 $ yarn coverage
+
+$ open coverage/index.html
 ```
 
 ### Deployment
