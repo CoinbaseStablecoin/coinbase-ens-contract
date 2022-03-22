@@ -5,8 +5,8 @@ pragma solidity 0.8.13;
 import { UUPSUpgradeable } from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import { Ownable } from "./openzeppelin/Ownable.sol";
 import { IExtendedResolver } from "./ens-offchain-resolver/IExtendedResolver.sol";
+import { Managable } from "./Managable.sol";
 import { SignatureVerifier } from "./ens-offchain-resolver/SignatureVerifier.sol";
 import { IResolverService } from "./ens-offchain-resolver/IResolverService.sol";
 
@@ -16,8 +16,8 @@ import { IResolverService } from "./ens-offchain-resolver/IResolverService.sol";
  */
 contract CoinbaseResolver is
     UUPSUpgradeable,
-    Ownable,
     ERC165,
+    Managable,
     IExtendedResolver
 {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -42,17 +42,23 @@ contract CoinbaseResolver is
      * lieu of a constructor to enable the use of a proxy contract.
      * @dev Can only be called once.
      * @param newOwner Owner address
+     * @param newSignerManager Signer manager address
+     * @param newGatewayManager Gateway manager address
      * @param newUrl Gateway URL
      * @param newSigners Signer addresses
      */
     function initialize(
         address newOwner,
+        address newSignerManager,
+        address newGatewayManager,
         string memory newUrl,
         address[] memory newSigners
     ) external {
         require(!_initialized, "already initialized");
 
         _transferOwnership(newOwner);
+        _changeSignerManager(newSignerManager);
+        _changeGatewayManager(newGatewayManager);
         _setUrl(newUrl);
         _addSigners(newSigners);
 
@@ -93,20 +99,23 @@ contract CoinbaseResolver is
 
     /**
      * @notice Set the gateway URL.
-     * @dev Can only be called by the owner.
+     * @dev Can only be called by the gateway manager.
      * @param newUrl New gateway URL
      */
 
-    function setUrl(string memory newUrl) external onlyOwner {
+    function setUrl(string memory newUrl) external onlyGatewayManager {
         _setUrl(newUrl);
     }
 
     /**
      * @notice Add a set of new signers.
-     * @dev Can only be called by the owner.
+     * @dev Can only be called by the signer manager.
      * @param signersToAdd Signer addresses
      */
-    function addSigners(address[] memory signersToAdd) external onlyOwner {
+    function addSigners(address[] memory signersToAdd)
+        external
+        onlySignerManager
+    {
         _addSigners(signersToAdd);
     }
 
@@ -117,7 +126,7 @@ contract CoinbaseResolver is
      */
     function removeSigners(address[] memory signersToRemove)
         external
-        onlyOwner
+        onlySignerManager
     {
         for (uint256 i = 0; i < signersToRemove.length; i++) {
             _signers.remove(signersToRemove[i]);

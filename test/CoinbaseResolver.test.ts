@@ -24,6 +24,8 @@ describe("CoinbaseResolver", () => {
 
   let deployer: SignerWithAddress;
   let owner: SignerWithAddress;
+  let signerManager: SignerWithAddress;
+  let gatewayManager: SignerWithAddress;
   let signer: Wallet;
   let user: SignerWithAddress;
   let user2: SignerWithAddress;
@@ -36,7 +38,8 @@ describe("CoinbaseResolver", () => {
     signer = ethers.Wallet.createRandom().connect(ethers.provider);
 
     let user3: SignerWithAddress;
-    [deployer, owner, user, user2, user3] = await ethers.getSigners();
+    [deployer, owner, signerManager, gatewayManager, user, user2, user3] =
+      await ethers.getSigners();
 
     // fund signer address
     await user3.sendTransaction({
@@ -61,12 +64,20 @@ describe("CoinbaseResolver", () => {
       await expect(
         resolver
           .connect(deployer)
-          .initialize(owner.address, url, [signer.address])
+          .initialize(
+            owner.address,
+            signerManager.address,
+            gatewayManager.address,
+            url,
+            [signer.address]
+          )
       ).not.to.be.reverted;
     });
 
     it("initializes the contract", async () => {
       expect(await resolver.owner()).to.equal(owner.address);
+      expect(await resolver.signerManager()).to.equal(signerManager.address);
+      expect(await resolver.gatewayManager()).to.equal(gatewayManager.address);
       expect(await resolver.url()).to.equal(url);
       expect(await resolver.isSigner(signer.address)).to.be.true;
     });
@@ -75,7 +86,13 @@ describe("CoinbaseResolver", () => {
       await expect(
         resolver
           .connect(deployer)
-          .initialize(owner.address, url, [signer.address])
+          .initialize(
+            owner.address,
+            signerManager.address,
+            gatewayManager.address,
+            url,
+            [signer.address]
+          )
       ).to.be.revertedWith("already initialized");
     });
   });
@@ -102,34 +119,43 @@ describe("CoinbaseResolver", () => {
     beforeEach(async () => {
       await resolver
         .connect(deployer)
-        .initialize(owner.address, url, [signer.address]);
+        .initialize(
+          owner.address,
+          signerManager.address,
+          gatewayManager.address,
+          url,
+          [signer.address]
+        );
     });
 
     describe(".url/.setUrl", () => {
-      it("lets the owner change the gateway URL", async () => {
-        await expect(resolver.connect(owner).setUrl("https://test.com")).not.to
-          .be.reverted;
+      it("lets the gateway manager change the gateway URL", async () => {
+        await expect(
+          resolver.connect(gatewayManager).setUrl("https://test.com")
+        ).not.to.be.reverted;
 
         expect(await resolver.url()).to.equal("https://test.com");
       });
 
       it("does not allow a non-admin to change the gateway URL", async () => {
-        for (const account of [deployer, signer, user, user2]) {
+        for (const account of [deployer, signerManager, signer, user, user2]) {
           await expect(
             resolver.connect(account).setUrl("https://test.com")
-          ).to.be.revertedWith("caller is not the owner");
+          ).to.be.revertedWith("caller is not the gateway manager");
         }
       });
     });
 
     describe(".signers/.isSigner/.addSigners/.removeSigners", () => {
-      it("lets the owner add and remove signers", async () => {
+      it("lets the signer manager add and remove signers", async () => {
         for (const account of [user, user2]) {
           expect(await resolver.isSigner(account.address)).to.be.false;
         }
 
         await expect(
-          resolver.connect(owner).addSigners([user.address, user2.address])
+          resolver
+            .connect(signerManager)
+            .addSigners([user.address, user2.address])
         ).not.to.be.reverted;
 
         let signers = await resolver.signers();
@@ -141,7 +167,9 @@ describe("CoinbaseResolver", () => {
         }
 
         await expect(
-          resolver.connect(owner).removeSigners([user.address, user2.address])
+          resolver
+            .connect(signerManager)
+            .removeSigners([user.address, user2.address])
         ).not.to.be.reverted;
 
         signers = await resolver.signers();
@@ -154,13 +182,13 @@ describe("CoinbaseResolver", () => {
       });
 
       it("does not allow a non-admin to add or remove signers", async () => {
-        for (const account of [deployer, signer, user, user2]) {
+        for (const account of [deployer, gatewayManager, signer, user, user2]) {
           await expect(
             resolver.connect(account).addSigners([user2.address])
-          ).to.be.revertedWith("caller is not the owner");
+          ).to.be.revertedWith("caller is not the signer manager");
           await expect(
             resolver.connect(account).removeSigners([signer.address])
-          ).to.be.revertedWith("caller is not the owner");
+          ).to.be.revertedWith("caller is not the signer manager");
         }
       });
     });
@@ -179,7 +207,14 @@ describe("CoinbaseResolver", () => {
       });
 
       it("does not allow a non-admin to transfer ownership", async () => {
-        for (const account of [deployer, signer, user, user2]) {
+        for (const account of [
+          deployer,
+          signerManager,
+          gatewayManager,
+          signer,
+          user,
+          user2,
+        ]) {
           await expect(
             resolver.connect(account).transferOwnership(account.address)
           ).to.be.revertedWith("caller is not the owner");
@@ -192,6 +227,70 @@ describe("CoinbaseResolver", () => {
             .connect(owner)
             .transferOwnership(ethers.constants.AddressZero)
         ).to.be.revertedWith("new owner is the zero address");
+      });
+    });
+
+    describe(".signerManager/.changeSignerManager", () => {
+      it("lets the owner change signer manager to another user", async () => {
+        await expect(resolver.connect(owner).changeSignerManager(user.address))
+          .not.to.be.reverted;
+
+        expect(await resolver.signerManager()).to.equal(user.address);
+      });
+
+      it("does not allow a non-admin to change signer manager", async () => {
+        for (const account of [
+          deployer,
+          signerManager,
+          gatewayManager,
+          signer,
+          user,
+          user2,
+        ]) {
+          await expect(
+            resolver.connect(account).changeSignerManager(account.address)
+          ).to.be.revertedWith("caller is not the owner");
+        }
+      });
+
+      it("does not allow a change signer manager to a zero address", async () => {
+        await expect(
+          resolver
+            .connect(owner)
+            .changeSignerManager(ethers.constants.AddressZero)
+        ).to.be.revertedWith("new signer manager is the zero address");
+      });
+    });
+
+    describe(".gatewayManager/.changeGatewayManager", () => {
+      it("lets the owner change gateway manager to another user", async () => {
+        await expect(resolver.connect(owner).changeGatewayManager(user.address))
+          .not.to.be.reverted;
+
+        expect(await resolver.gatewayManager()).to.equal(user.address);
+      });
+
+      it("does not allow a non-admin to change gateway manager", async () => {
+        for (const account of [
+          deployer,
+          signerManager,
+          gatewayManager,
+          signer,
+          user,
+          user2,
+        ]) {
+          await expect(
+            resolver.connect(account).changeGatewayManager(account.address)
+          ).to.be.revertedWith("caller is not the owner");
+        }
+      });
+
+      it("does not allow a change gateway manager to a zero address", async () => {
+        await expect(
+          resolver
+            .connect(owner)
+            .changeGatewayManager(ethers.constants.AddressZero)
+        ).to.be.revertedWith("new gateway manager is the zero address");
       });
     });
 
@@ -285,8 +384,9 @@ describe("CoinbaseResolver", () => {
 
         it("reverts if it is not signed by a signer", async () => {
           // remove signer
-          await expect(resolver.connect(owner).removeSigners([signer.address]))
-            .not.to.be.reverted;
+          await expect(
+            resolver.connect(signerManager).removeSigners([signer.address])
+          ).not.to.be.reverted;
 
           const expires = Math.floor(Date.now() / 1000) + 300;
 
@@ -363,7 +463,15 @@ describe("CoinbaseResolver", () => {
           await expect(resolver.connect(owner).renounceOwnership()).not.to.be
             .reverted;
 
-          for (const account of [owner, deployer, signer, user, user2]) {
+          for (const account of [
+            owner,
+            deployer,
+            signerManager,
+            gatewayManager,
+            signer,
+            user,
+            user2,
+          ]) {
             await expect(
               resolver
                 .connect(account)
