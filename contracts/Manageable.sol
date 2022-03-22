@@ -14,7 +14,7 @@ import { Ownable } from "./openzeppelin/Ownable.sol";
  * functions to restrict their use to the signer manager and the gateway
  * manager respectively.
  */
-abstract contract Managable is Ownable {
+abstract contract Manageable is Ownable {
     address private _signerManager;
     address private _gatewayManager;
 
@@ -50,7 +50,7 @@ abstract contract Managable is Ownable {
     modifier onlySignerManager() {
         require(
             signerManager() == _msgSender(),
-            "Managable: caller is not the signer manager"
+            "Manageable: caller is not the signer manager"
         );
         _;
     }
@@ -61,7 +61,7 @@ abstract contract Managable is Ownable {
     modifier onlyGatewayManager() {
         require(
             gatewayManager() == _msgSender(),
-            "Managable: caller is not the gateway manager"
+            "Manageable: caller is not the gateway manager"
         );
         _;
     }
@@ -78,7 +78,7 @@ abstract contract Managable is Ownable {
     {
         require(
             newSignerManager != address(0),
-            "Managable: new signer manager is the zero address"
+            "Manageable: new signer manager is the zero address"
         );
         _changeSignerManager(newSignerManager);
     }
@@ -95,7 +95,7 @@ abstract contract Managable is Ownable {
     {
         require(
             newGatewayManager != address(0),
-            "Managable: new gateway manager is the zero address"
+            "Manageable: new gateway manager is the zero address"
         );
         _changeGatewayManager(newGatewayManager);
     }

@@ -6,7 +6,7 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts/proxy/utils/UUPSUpgrade
 import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { IExtendedResolver } from "./ens-offchain-resolver/IExtendedResolver.sol";
-import { Managable } from "./Managable.sol";
+import { Manageable } from "./Manageable.sol";
 import { SignatureVerifier } from "./ens-offchain-resolver/SignatureVerifier.sol";
 import { IResolverService } from "./ens-offchain-resolver/IResolverService.sol";
 
@@ -17,7 +17,7 @@ import { IResolverService } from "./ens-offchain-resolver/IResolverService.sol";
 contract CoinbaseResolver is
     UUPSUpgradeable,
     ERC165,
-    Managable,
+    Manageable,
     IExtendedResolver
 {
     using EnumerableSet for EnumerableSet.AddressSet;
