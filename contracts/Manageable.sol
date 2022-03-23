@@ -49,7 +49,7 @@ abstract contract Manageable is Ownable {
      */
     modifier onlySignerManager() {
         require(
-            signerManager() == _msgSender(),
+            _signerManager == _msgSender(),
             "Manageable: caller is not the signer manager"
         );
         _;
@@ -60,7 +60,7 @@ abstract contract Manageable is Ownable {
      */
     modifier onlyGatewayManager() {
         require(
-            gatewayManager() == _msgSender(),
+            _gatewayManager == _msgSender(),
             "Manageable: caller is not the gateway manager"
         );
         _;
