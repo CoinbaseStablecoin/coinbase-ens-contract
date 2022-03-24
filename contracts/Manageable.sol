@@ -32,7 +32,7 @@ abstract contract Manageable is Ownable {
      * @notice Returns the address of the current signer manager.
      * @return address the signer manager address.
      */
-    function signerManager() public view virtual returns (address) {
+    function signerManager() external view virtual returns (address) {
         return _signerManager;
     }
 
@@ -40,7 +40,7 @@ abstract contract Manageable is Ownable {
      * @notice Returns the address of the current gateway manager.
      * @return address the gateway manager address.
      */
-    function gatewayManager() public view virtual returns (address) {
+    function gatewayManager() external view virtual returns (address) {
         return _gatewayManager;
     }
 
@@ -72,7 +72,7 @@ abstract contract Manageable is Ownable {
      * @param newSignerManager the new signer manager address.
      */
     function changeSignerManager(address newSignerManager)
-        public
+        external
         virtual
         onlyOwner
     {
@@ -89,7 +89,7 @@ abstract contract Manageable is Ownable {
      * @param newGatewayManager the new gateway manager address.
      */
     function changeGatewayManager(address newGatewayManager)
-        public
+        external
         virtual
         onlyOwner
     {
