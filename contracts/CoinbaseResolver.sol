@@ -2,7 +2,6 @@
 
 pragma solidity 0.8.13;
 
-import { UUPSUpgradeable } from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { IExtendedResolver } from "./ens-offchain-resolver/IExtendedResolver.sol";
@@ -14,12 +13,7 @@ import { IResolverService } from "./ens-offchain-resolver/IResolverService.sol";
  * @notice Coinbase Offchain ENS Resolver
  * @dev Adapted from: https://github.com/ensdomains/offchain-resolver/blob/2bc616f19a94370828c35f29f71d5d4cab3a9a4f/packages/contracts/contracts/OffchainResolver.sol
  */
-contract CoinbaseResolver is
-    UUPSUpgradeable,
-    ERC165,
-    Manageable,
-    IExtendedResolver
-{
+contract CoinbaseResolver is ERC165, Manageable, IExtendedResolver {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     bool private _initialized;
@@ -38,31 +32,25 @@ contract CoinbaseResolver is
     );
 
     /**
-     * @notice Initialize the contract with the initial parameters. Used in
-     * lieu of a constructor to enable the use of a proxy contract.
-     * @dev Can only be called once.
+     * @notice Initializes the contract with the initial parameters.
      * @param newOwner Owner address
      * @param newSignerManager Signer manager address
      * @param newGatewayManager Gateway manager address
      * @param newUrl Gateway URL
      * @param newSigners Signer addresses
      */
-    function initialize(
+    constructor(
         address newOwner,
         address newSignerManager,
         address newGatewayManager,
         string memory newUrl,
         address[] memory newSigners
-    ) external {
-        require(!_initialized, "already initialized");
-
+    ) {
         _transferOwnership(newOwner);
         _changeSignerManager(newSignerManager);
         _changeGatewayManager(newGatewayManager);
         _setUrl(newUrl);
         _addSigners(newSigners);
-
-        _initialized = true;
     }
 
     /**
@@ -87,14 +75,6 @@ contract CoinbaseResolver is
      */
     function isSigner(address account) external view returns (bool) {
         return _signers.contains(account);
-    }
-
-    /**
-     * @notice Returns the implementation address.
-     * @return Implementation address
-     */
-    function implementation() external view onlyProxy returns (address) {
-        return _getImplementation();
     }
 
     /**
@@ -230,18 +210,5 @@ contract CoinbaseResolver is
             _signers.add(signersToAdd[i]);
         }
         emit SignersAdded(signersToAdd);
-    }
-
-    /**
-     * @dev Upgrades can only be performed by the owner
-     */
-    // solhint-disable-next-line no-empty-blocks
-    function _authorizeUpgrade(address) internal override onlyOwner {}
-
-    /**
-     * @dev Disabled. Use .upgradeToAndCall instead.
-     */
-    function upgradeTo(address) external view override onlyProxy {
-        revert("disabled");
     }
 }

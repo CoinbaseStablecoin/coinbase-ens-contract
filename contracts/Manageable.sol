@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.13;
 
-import { Ownable } from "./openzeppelin/Ownable.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @dev Contract module which provides access control mechanism, where
