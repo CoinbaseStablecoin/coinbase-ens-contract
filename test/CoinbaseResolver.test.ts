@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import type { CoinbaseResolver } from "../src/types/CoinbaseResolver";
+import type { CoinbaseResolver } from "../src/types";
 import { encode } from "../src/dnsname";
 import { expect } from "chai";
 import { BytesLike, utils, Wallet } from "ethers";
