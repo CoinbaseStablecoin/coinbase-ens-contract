@@ -8,7 +8,7 @@ import { resolve } from "path";
 
 import { config as dotenvConfig } from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
-import { NetworkUserConfig } from "hardhat/types";
+import { HttpNetworkUserConfig } from "hardhat/types";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
@@ -22,9 +22,11 @@ const chainIds = {
 };
 
 // Ensure that we have all the environment variables we need.
-let mnemonic: string | undefined = process.env.MNEMONIC;
-if (!mnemonic) {
-  console.warn("MNEMONIC is not set in the .env file");
+let mnemonic: string = process.env.MNEMONIC || "";
+const privateKey: string = process.env.PRIVATE_KEY || "";
+
+if (!mnemonic && !privateKey) {
+  console.warn("neither MNEMONIC nor PRIVATE_KEY is not set in the .env file");
   mnemonic =
     "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
 }
@@ -36,17 +38,18 @@ if (!infuraApiKey) {
 
 const etherscanApiKey: string | undefined = process.env.ETHERSCAN_API_KEY;
 
-function getChainConfig(network: keyof typeof chainIds): NetworkUserConfig {
+function getChainConfig(network: keyof typeof chainIds): HttpNetworkUserConfig {
   const url: string = "https://" + network + ".infura.io/v3/" + infuraApiKey;
   return {
-    accounts: {
-      count: 10,
-      mnemonic,
-      path: "m/44'/60'/0'/0",
-    },
+    accounts: privateKey
+      ? [privateKey]
+      : {
+          count: 10,
+          mnemonic,
+          path: "m/44'/60'/0'/0",
+        },
     chainId: chainIds[network],
     url,
-    minGasPrice: 2e9,
   };
 }
 
@@ -60,9 +63,9 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      accounts: {
-        mnemonic,
-      },
+      accounts: privateKey
+        ? [{ privateKey, balance: "100000000000000000000" }]
+        : { mnemonic },
       chainId: chainIds.hardhat,
     },
     goerli: getChainConfig("goerli"),

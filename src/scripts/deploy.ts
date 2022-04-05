@@ -19,11 +19,16 @@ async function main() {
   const iCoinbaseResolver = CoinbaseResolver__factory.createInterface();
   const constructorData = iCoinbaseResolver.encodeDeploy(constructorArgs);
 
-  console.log(`deploying CoinbaseResolver (arguments: ${constructorData})...`);
+  console.log(
+    "Deploying CoinbaseResolver...\n\n" +
+      `Constructor arguments:\n${JSON.stringify(constructorArgs)}\n\n` +
+      `Constructor calldata:\n${constructorData}\n`
+  );
 
   const implementation = await resolverFactory.deploy(...constructorArgs);
+  await implementation.deployed();
   console.log(
-    "-> deployed CoinbaseResolver contract at",
+    "-> Deployed CoinbaseResolver contract at",
     implementation.address
   );
 }
