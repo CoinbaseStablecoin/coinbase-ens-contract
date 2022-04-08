@@ -107,7 +107,7 @@ describe("CoinbaseResolver", () => {
       await expect(
         resolver
           .connect(signerManager)
-          .addSigners([user.address, user2.address])
+          .addSigners([user.address, user.address, user2.address])
       ).not.to.be.reverted;
 
       let signers = await resolver.signers();
@@ -121,7 +121,7 @@ describe("CoinbaseResolver", () => {
       await expect(
         resolver
           .connect(signerManager)
-          .removeSigners([user.address, user2.address])
+          .removeSigners([user.address, user.address, user2.address])
       ).not.to.be.reverted;
 
       signers = await resolver.signers();

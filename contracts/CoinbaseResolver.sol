@@ -109,7 +109,7 @@ contract CoinbaseResolver is ERC165, Manageable, IExtendedResolver {
         onlySignerManager
     {
         for (uint256 i = 0; i < signersToRemove.length; i++) {
-            _signers.remove(signersToRemove[i]);
+            if (!_signers.remove(signersToRemove[i])) delete signersToRemove[i];
         }
         emit SignersRemoved(signersToRemove);
     }
@@ -207,7 +207,7 @@ contract CoinbaseResolver is ERC165, Manageable, IExtendedResolver {
 
     function _addSigners(address[] memory signersToAdd) private {
         for (uint256 i = 0; i < signersToAdd.length; i++) {
-            _signers.add(signersToAdd[i]);
+            if (!_signers.add(signersToAdd[i])) delete signersToAdd[i];
         }
         emit SignersAdded(signersToAdd);
     }
