@@ -84,7 +84,8 @@ describe("CoinbaseResolver", () => {
   describe(".url/.setUrl", () => {
     it("lets the gateway manager change the gateway URL", async () => {
       await expect(resolver.connect(gatewayManager).setUrl("https://test.com"))
-        .not.to.be.reverted;
+        .to.emit(resolver, "UrlSet")
+        .withArgs(url, "https://test.com");
 
       expect(await resolver.url()).to.equal("https://test.com");
     });

@@ -23,7 +23,7 @@ contract CoinbaseResolver is ERC165, Manageable, IExtendedResolver {
     EnumerableSet.AddressSet private _signers;
 
     /// @notice Event raised when a new gateway URL is set.
-    event UrlSet(string indexed newUrl);
+    event UrlSet(string indexed previousUrl, string indexed newUrl);
     /// @notice Event raised when a new signer is added.
     event SignersAdded(address[] indexed addedSigners);
     /// @notice Event raised when a signer is removed.
@@ -218,8 +218,9 @@ contract CoinbaseResolver is ERC165, Manageable, IExtendedResolver {
      * @param newUrl New URL to be set.
      */
     function _setUrl(string memory newUrl) private {
+        string memory previousUrl = _url;
         _url = newUrl;
-        emit UrlSet(newUrl);
+        emit UrlSet(previousUrl, newUrl);
     }
 
     /**
