@@ -21,8 +21,8 @@ contract CoinbaseResolver is ERC165, Manageable, IExtendedResolver {
     EnumerableSet.AddressSet private _signers;
 
     event UrlSet(string indexed newUrl);
-    event SignersAdded(address[] indexed addedSigners);
-    event SignersRemoved(address[] indexed removedSigners);
+    event SignerAdded(address indexed addedSigner);
+    event SignerRemoved(address indexed removedSigner);
     error OffchainLookup(
         address sender,
         string[] urls,
@@ -109,9 +109,11 @@ contract CoinbaseResolver is ERC165, Manageable, IExtendedResolver {
         onlySignerManager
     {
         for (uint256 i = 0; i < signersToRemove.length; i++) {
-            _signers.remove(signersToRemove[i]);
+            address signer = signersToRemove[i];
+            if (_signers.remove(signer)) {
+                emit SignerRemoved(signer);
+            }
         }
-        emit SignersRemoved(signersToRemove);
     }
 
     /**
@@ -207,8 +209,10 @@ contract CoinbaseResolver is ERC165, Manageable, IExtendedResolver {
 
     function _addSigners(address[] memory signersToAdd) private {
         for (uint256 i = 0; i < signersToAdd.length; i++) {
-            _signers.add(signersToAdd[i]);
+            address signer = signersToAdd[i];
+            if (_signers.add(signersToAdd[i])) {
+                emit SignerAdded(signer);
+            }
         }
-        emit SignersAdded(signersToAdd);
     }
 }
