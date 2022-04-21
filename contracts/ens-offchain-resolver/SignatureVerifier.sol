@@ -7,6 +7,9 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 library SignatureVerifier {
+    /// @dev Prefix with 0x1900 to prevent the preimage from being a valid ethereum transaction.
+    bytes2 private constant _PREIMAGE_PREFIX = 0x1900;
+
     /**
      * @dev Generates a hash for signing/verifying.
      * @param target The address the signature is for.
@@ -24,7 +27,7 @@ library SignatureVerifier {
         return
             keccak256(
                 abi.encodePacked(
-                    hex"1900",
+                    _PREIMAGE_PREFIX,
                     target,
                     expires,
                     keccak256(request),
