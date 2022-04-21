@@ -145,8 +145,7 @@ contract CoinbaseResolver is ERC165, Manageable, IExtendedResolver {
     }
 
     /**
-     * @notice Initiate a resolution conforming to the ENSIP-10. Reverts with an
-     * an OffchainLookup error.
+     * @notice Initiate a resolution conforming to the ENSIP-10. Reverts with an OffchainLookup error.
      * @param name DNS-encoded name to resolve.
      * @param data ABI-encoded data for the underlying resolution function (e.g. addr(bytes32), text(bytes32,string)).
      * @return Always reverts with an OffchainLookup error.
