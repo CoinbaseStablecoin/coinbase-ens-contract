@@ -84,7 +84,8 @@ describe("CoinbaseResolver", () => {
   describe(".url/.setUrl", () => {
     it("lets the gateway manager change the gateway URL", async () => {
       await expect(resolver.connect(gatewayManager).setUrl("https://test.com"))
-        .not.to.be.reverted;
+        .to.emit(resolver, "UrlSet")
+        .withArgs(url, "https://test.com");
 
       expect(await resolver.url()).to.equal("https://test.com");
     });
@@ -93,7 +94,9 @@ describe("CoinbaseResolver", () => {
       for (const account of [deployer, signerManager, signer, user, user2]) {
         await expect(
           resolver.connect(account).setUrl("https://test.com")
-        ).to.be.revertedWith("caller is not the gateway manager");
+        ).to.be.revertedWith(
+          "Manageable::onlyGatewayManager: caller is not gateway manager"
+        );
       }
     });
   });
@@ -105,10 +108,17 @@ describe("CoinbaseResolver", () => {
       }
 
       await expect(
-        resolver
-          .connect(signerManager)
-          .addSigners([user.address, user2.address])
-      ).not.to.be.reverted;
+        resolver.connect(signerManager).addSigners([
+          user.address,
+          user.address, // duplicate address is ignored
+          user2.address,
+          signer.address, // existing signer address is ignored
+        ])
+      )
+        .to.emit(resolver, "SignerAdded")
+        .withArgs(user.address)
+        .and.to.emit(resolver, "SignerAdded")
+        .withArgs(user2.address);
 
       let signers = await resolver.signers();
       expect(signers).to.have.lengthOf(3);
@@ -119,10 +129,17 @@ describe("CoinbaseResolver", () => {
       }
 
       await expect(
-        resolver
-          .connect(signerManager)
-          .removeSigners([user.address, user2.address])
-      ).not.to.be.reverted;
+        resolver.connect(signerManager).removeSigners([
+          user.address,
+          user.address, // duplicate address is ignored
+          user2.address,
+          owner.address, // non-signer address is ignored
+        ])
+      )
+        .to.emit(resolver, "SignerRemoved")
+        .withArgs(user.address)
+        .and.to.emit(resolver, "SignerRemoved")
+        .withArgs(user2.address);
 
       signers = await resolver.signers();
       expect(signers).to.eql([signer.address]);
@@ -137,10 +154,14 @@ describe("CoinbaseResolver", () => {
       for (const account of [deployer, gatewayManager, signer, user, user2]) {
         await expect(
           resolver.connect(account).addSigners([user2.address])
-        ).to.be.revertedWith("caller is not the signer manager");
+        ).to.be.revertedWith(
+          "Manageable::onlySignerManager: caller is not signer manager"
+        );
         await expect(
           resolver.connect(account).removeSigners([signer.address])
-        ).to.be.revertedWith("caller is not the signer manager");
+        ).to.be.revertedWith(
+          "Manageable::onlySignerManager: caller is not signer manager"
+        );
       }
     });
   });
@@ -212,7 +233,9 @@ describe("CoinbaseResolver", () => {
         resolver
           .connect(owner)
           .changeSignerManager(ethers.constants.AddressZero)
-      ).to.be.revertedWith("new signer manager is the zero address");
+      ).to.be.revertedWith(
+        "Manageable::changeSignerManager: manager is the zero address"
+      );
     });
   });
 
@@ -244,7 +267,9 @@ describe("CoinbaseResolver", () => {
         resolver
           .connect(owner)
           .changeGatewayManager(ethers.constants.AddressZero)
-      ).to.be.revertedWith("new gateway manager is the zero address");
+      ).to.be.revertedWith(
+        "Manageable::changeGatewayManager: manager is the zero address"
+      );
     });
   });
 
