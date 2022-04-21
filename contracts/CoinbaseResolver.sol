@@ -210,7 +210,7 @@ contract CoinbaseResolver is ERC165, Manageable, IExtendedResolver {
     function _addSigners(address[] memory signersToAdd) private {
         for (uint256 i = 0; i < signersToAdd.length; i++) {
             address signer = signersToAdd[i];
-            if (_signers.add(signersToAdd[i])) {
+            if (_signers.add(signer)) {
                 emit SignerAdded(signer);
             }
         }
