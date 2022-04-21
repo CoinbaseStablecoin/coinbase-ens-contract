@@ -21,7 +21,7 @@ library SignatureVerifier {
     function makeSignatureHash(
         address target,
         uint64 expires,
-        bytes memory request,
+        bytes calldata request,
         bytes memory result
     ) internal pure returns (bytes32) {
         return
@@ -55,6 +55,11 @@ library SignatureVerifier {
             response,
             (bytes, uint64, bytes)
         );
+        require(
+            expires >= block.timestamp,
+            "SignatureVerifier: Signature expired"
+        );
+
         bytes32 sigHash = makeSignatureHash(
             address(this),
             expires,
@@ -63,10 +68,6 @@ library SignatureVerifier {
         );
 
         address signer = ECDSA.recover(sigHash, sig);
-        require(
-            expires >= block.timestamp,
-            "SignatureVerifier: Signature expired"
-        );
         return (signer, result);
     }
 }
