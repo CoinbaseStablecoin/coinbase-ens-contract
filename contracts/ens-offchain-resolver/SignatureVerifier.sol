@@ -9,9 +9,11 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 library SignatureVerifier {
     /**
      * @dev Generates a hash for signing/verifying.
-     * @param target: The address the signature is for.
-     * @param request: The original request that was sent.
-     * @param result: The `result` field of the response (not including the signature part).
+     * @param target The address the signature is for.
+     * @param expires Time at which the signature expires.
+     * @param request The original request that was sent.
+     * @param result The `result` field of the response (not including the signature part).
+     * @return Hashed data for signing and verifying.
      */
     function makeSignatureHash(
         address target,
@@ -33,11 +35,11 @@ library SignatureVerifier {
 
     /**
      * @dev Verifies a signed message returned from a callback.
-     * @param request: The original request that was sent.
-     * @param response: An ABI encoded tuple of `(bytes result, uint64 expires, bytes sig)`, where `result` is the data to return
+     * @param request The original request that was sent.
+     * @param response An ABI encoded tuple of `(bytes result, uint64 expires, bytes sig)`, where `result` is the data to return
      *        to the caller, and `sig` is the (r,s,v) encoded message signature.
-     * @return signer: The address that signed this message.
-     * @return result: The `result` decoded from `response`.
+     * @return signer The address that signed this message.
+     * @return result The `result` decoded from `response`.
      */
     function verify(bytes calldata request, bytes calldata response)
         internal

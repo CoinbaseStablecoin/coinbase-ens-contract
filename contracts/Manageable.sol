@@ -15,14 +15,18 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  * manager respectively.
  */
 abstract contract Manageable is Ownable {
+    /// @dev Address of the signer manager.
     address private _signerManager;
+    /// @dev Address of the gateway manager.
     address private _gatewayManager;
 
+    /// @notice Event raised when a signer manager is updated.
     event SignerManagerChanged(
         address indexed previousSignerManager,
         address indexed newSignerManager
     );
 
+    /// @notice Event raised when a gateway manager is updated.
     event GatewayManagerChanged(
         address indexed previousGatewayManager,
         address indexed newGatewayManager
@@ -68,7 +72,7 @@ abstract contract Manageable is Ownable {
 
     /**
      * @notice Change signer manager of the contract to a new account (`newSignerManager`).
-     * Can only be called by the current owner.
+     * @dev Can only be called by the current owner.
      * @param newSignerManager the new signer manager address.
      */
     function changeSignerManager(address newSignerManager)
@@ -85,7 +89,7 @@ abstract contract Manageable is Ownable {
 
     /**
      * @notice Change gateway manager of the contract to a new account (`newGatewayManager`).
-     * Can only be called by the current owner.
+     * @dev Can only be called by the current owner.
      * @param newGatewayManager the new gateway manager address.
      */
     function changeGatewayManager(address newGatewayManager)
@@ -101,8 +105,9 @@ abstract contract Manageable is Ownable {
     }
 
     /**
-     * @dev Change signer manager of the contract to a new account (`newSignerManager`).
-     * Internal function without access restriction.
+     * @notice Change signer manager of the contract to a new account (`newSignerManager`).
+     * @dev Internal function without access restriction.
+     * @param newSignerManager the new signer manager address.
      */
     function _changeSignerManager(address newSignerManager) internal virtual {
         address oldSignerManager = _signerManager;
@@ -111,8 +116,9 @@ abstract contract Manageable is Ownable {
     }
 
     /**
-     * @dev Change gateway manager of the contract to a new account (`newGatewayManager`).
-     * Internal function without access restriction.
+     * @notice Change gateway manager of the contract to a new account (`newGatewayManager`).
+     * @dev Internal function without access restriction.
+     * @param newGatewayManager the new gateway manager address.
      */
     function _changeGatewayManager(address newGatewayManager) internal virtual {
         address oldGatewayManager = _gatewayManager;
