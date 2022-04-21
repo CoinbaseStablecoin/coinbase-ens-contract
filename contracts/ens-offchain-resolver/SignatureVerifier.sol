@@ -34,6 +34,8 @@ library SignatureVerifier {
     }
 
     /**
+     * @notice A valid non-expired response can still contain stale data
+     * if the offchain data changes during the expiry duration before decoding the response.
      * @dev Verifies a signed message returned from a callback.
      * @param request The original request that was sent.
      * @param response An ABI encoded tuple of `(bytes result, uint64 expires, bytes sig)`, where `result` is the data to return
