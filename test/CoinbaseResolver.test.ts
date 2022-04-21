@@ -108,10 +108,17 @@ describe("CoinbaseResolver", () => {
       }
 
       await expect(
-        resolver
-          .connect(signerManager)
-          .addSigners([user.address, user2.address])
-      ).not.to.be.reverted;
+        resolver.connect(signerManager).addSigners([
+          user.address,
+          user.address, // duplicate address is ignored
+          user2.address,
+          signer.address, // existing signer address is ignored
+        ])
+      )
+        .to.emit(resolver, "SignerAdded")
+        .withArgs(user.address)
+        .and.to.emit(resolver, "SignerAdded")
+        .withArgs(user2.address);
 
       let signers = await resolver.signers();
       expect(signers).to.have.lengthOf(3);
@@ -122,10 +129,17 @@ describe("CoinbaseResolver", () => {
       }
 
       await expect(
-        resolver
-          .connect(signerManager)
-          .removeSigners([user.address, user2.address])
-      ).not.to.be.reverted;
+        resolver.connect(signerManager).removeSigners([
+          user.address,
+          user.address, // duplicate address is ignored
+          user2.address,
+          owner.address, // non-signer address is ignored
+        ])
+      )
+        .to.emit(resolver, "SignerRemoved")
+        .withArgs(user.address)
+        .and.to.emit(resolver, "SignerRemoved")
+        .withArgs(user2.address);
 
       signers = await resolver.signers();
       expect(signers).to.eql([signer.address]);

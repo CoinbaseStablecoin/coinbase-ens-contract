@@ -25,9 +25,9 @@ contract CoinbaseResolver is ERC165, Manageable, IExtendedResolver {
     /// @notice Event raised when a new gateway URL is set.
     event UrlSet(string indexed previousUrl, string indexed newUrl);
     /// @notice Event raised when a new signer is added.
-    event SignersAdded(address[] indexed addedSigners);
+    event SignerAdded(address indexed addedSigner);
     /// @notice Event raised when a signer is removed.
-    event SignersRemoved(address[] indexed removedSigners);
+    event SignerRemoved(address indexed removedSigner);
 
     /**
      * @dev Error to raise when an offchain lookup is required.
@@ -123,9 +123,11 @@ contract CoinbaseResolver is ERC165, Manageable, IExtendedResolver {
     {
         uint256 length = signersToRemove.length;
         for (uint256 i = 0; i < length; i++) {
-            _signers.remove(signersToRemove[i]);
+            address signer = signersToRemove[i];
+            if (_signers.remove(signer)) {
+                emit SignerRemoved(signer);
+            }
         }
-        emit SignersRemoved(signersToRemove);
     }
 
     /**
@@ -233,8 +235,10 @@ contract CoinbaseResolver is ERC165, Manageable, IExtendedResolver {
     function _addSigners(address[] memory signersToAdd) private {
         uint256 length = signersToAdd.length;
         for (uint256 i = 0; i < length; i++) {
-            _signers.add(signersToAdd[i]);
+            address signer = signersToAdd[i];
+            if (_signers.add(signer)) {
+                emit SignerAdded(signer);
+            }
         }
-        emit SignersAdded(signersToAdd);
     }
 }
