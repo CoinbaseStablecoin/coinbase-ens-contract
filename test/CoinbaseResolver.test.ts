@@ -208,7 +208,8 @@ describe("CoinbaseResolver", () => {
   describe(".signerManager/.changeSignerManager", () => {
     it("lets the owner change signer manager to another user", async () => {
       await expect(resolver.connect(owner).changeSignerManager(user.address))
-        .not.to.be.reverted;
+        .to.emit(resolver, "SignerManagerChanged")
+        .withArgs(signerManager.address, user.address);
 
       expect(await resolver.signerManager()).to.equal(user.address);
     });
@@ -242,7 +243,8 @@ describe("CoinbaseResolver", () => {
   describe(".gatewayManager/.changeGatewayManager", () => {
     it("lets the owner change gateway manager to another user", async () => {
       await expect(resolver.connect(owner).changeGatewayManager(user.address))
-        .not.to.be.reverted;
+        .to.emit(resolver, "GatewayManagerChanged")
+        .withArgs(gatewayManager.address, user.address);
 
       expect(await resolver.gatewayManager()).to.equal(user.address);
     });
