@@ -7,22 +7,27 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 library SignatureVerifier {
+    /// @dev Prefix with 0x1900 to prevent the preimage from being a valid ethereum transaction.
+    bytes2 private constant _PREIMAGE_PREFIX = 0x1900;
+
     /**
      * @dev Generates a hash for signing/verifying.
-     * @param target: The address the signature is for.
-     * @param request: The original request that was sent.
-     * @param result: The `result` field of the response (not including the signature part).
+     * @param target The address the signature is for.
+     * @param expires Time at which the signature expires.
+     * @param request The original request that was sent.
+     * @param result The `result` field of the response (not including the signature part).
+     * @return Hashed data for signing and verifying.
      */
     function makeSignatureHash(
         address target,
         uint64 expires,
-        bytes memory request,
+        bytes calldata request,
         bytes memory result
     ) internal pure returns (bytes32) {
         return
             keccak256(
                 abi.encodePacked(
-                    hex"1900",
+                    _PREIMAGE_PREFIX,
                     target,
                     expires,
                     keccak256(request),
@@ -32,12 +37,14 @@ library SignatureVerifier {
     }
 
     /**
+     * @notice A valid non-expired response can still contain stale data
+     * if the offchain data changes during the expiry duration before decoding the response.
      * @dev Verifies a signed message returned from a callback.
-     * @param request: The original request that was sent.
-     * @param response: An ABI encoded tuple of `(bytes result, uint64 expires, bytes sig)`, where `result` is the data to return
+     * @param request The original request that was sent.
+     * @param response An ABI encoded tuple of `(bytes result, uint64 expires, bytes sig)`, where `result` is the data to return
      *        to the caller, and `sig` is the (r,s,v) encoded message signature.
-     * @return signer: The address that signed this message.
-     * @return result: The `result` decoded from `response`.
+     * @return signer The address that signed this message.
+     * @return result The `result` decoded from `response`.
      */
     function verify(bytes calldata request, bytes calldata response)
         internal
@@ -48,6 +55,11 @@ library SignatureVerifier {
             response,
             (bytes, uint64, bytes)
         );
+        require(
+            expires >= block.timestamp,
+            "SignatureVerifier::verify: Signature expired"
+        );
+
         bytes32 sigHash = makeSignatureHash(
             address(this),
             expires,
@@ -56,10 +68,7 @@ library SignatureVerifier {
         );
 
         address signer = ECDSA.recover(sigHash, sig);
-        require(
-            expires >= block.timestamp,
-            "SignatureVerifier: Signature expired"
-        );
+
         return (signer, result);
     }
 }

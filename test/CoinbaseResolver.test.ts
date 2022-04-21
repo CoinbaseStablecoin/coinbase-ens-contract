@@ -84,7 +84,8 @@ describe("CoinbaseResolver", () => {
   describe(".url/.setUrl", () => {
     it("lets the gateway manager change the gateway URL", async () => {
       await expect(resolver.connect(gatewayManager).setUrl("https://test.com"))
-        .not.to.be.reverted;
+        .to.emit(resolver, "UrlSet")
+        .withArgs(url, "https://test.com");
 
       expect(await resolver.url()).to.equal("https://test.com");
     });
@@ -93,7 +94,9 @@ describe("CoinbaseResolver", () => {
       for (const account of [deployer, signerManager, signer, user, user2]) {
         await expect(
           resolver.connect(account).setUrl("https://test.com")
-        ).to.be.revertedWith("caller is not the gateway manager");
+        ).to.be.revertedWith(
+          "Manageable::onlyGatewayManager: caller is not gateway manager"
+        );
       }
     });
   });
@@ -151,10 +154,14 @@ describe("CoinbaseResolver", () => {
       for (const account of [deployer, gatewayManager, signer, user, user2]) {
         await expect(
           resolver.connect(account).addSigners([user2.address])
-        ).to.be.revertedWith("caller is not the signer manager");
+        ).to.be.revertedWith(
+          "Manageable::onlySignerManager: caller is not signer manager"
+        );
         await expect(
           resolver.connect(account).removeSigners([signer.address])
-        ).to.be.revertedWith("caller is not the signer manager");
+        ).to.be.revertedWith(
+          "Manageable::onlySignerManager: caller is not signer manager"
+        );
       }
     });
   });
@@ -226,7 +233,9 @@ describe("CoinbaseResolver", () => {
         resolver
           .connect(owner)
           .changeSignerManager(ethers.constants.AddressZero)
-      ).to.be.revertedWith("new signer manager is the zero address");
+      ).to.be.revertedWith(
+        "Manageable::changeSignerManager: manager is the zero address"
+      );
     });
   });
 
@@ -258,7 +267,9 @@ describe("CoinbaseResolver", () => {
         resolver
           .connect(owner)
           .changeGatewayManager(ethers.constants.AddressZero)
-      ).to.be.revertedWith("new gateway manager is the zero address");
+      ).to.be.revertedWith(
+        "Manageable::changeGatewayManager: manager is the zero address"
+      );
     });
   });
 
