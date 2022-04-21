@@ -54,7 +54,7 @@ abstract contract Manageable is Ownable {
     modifier onlySignerManager() {
         require(
             _signerManager == _msgSender(),
-            "Manageable: caller is not the signer manager"
+            "Manageable::onlySignerManager: caller is not signer manager"
         );
         _;
     }
@@ -65,7 +65,7 @@ abstract contract Manageable is Ownable {
     modifier onlyGatewayManager() {
         require(
             _gatewayManager == _msgSender(),
-            "Manageable: caller is not the gateway manager"
+            "Manageable::onlyGatewayManager: caller is not gateway manager"
         );
         _;
     }
@@ -82,7 +82,7 @@ abstract contract Manageable is Ownable {
     {
         require(
             newSignerManager != address(0),
-            "Manageable: new signer manager is the zero address"
+            "Manageable::changeSignerManager: manager is the zero address"
         );
         _changeSignerManager(newSignerManager);
     }
@@ -99,7 +99,7 @@ abstract contract Manageable is Ownable {
     {
         require(
             newGatewayManager != address(0),
-            "Manageable: new gateway manager is the zero address"
+            "Manageable::changeGatewayManager: manager is the zero address"
         );
         _changeGatewayManager(newGatewayManager);
     }
