@@ -16,7 +16,6 @@ import { IResolverService } from "./ens-offchain-resolver/IResolverService.sol";
 contract CoinbaseResolver is ERC165, Manageable, IExtendedResolver {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    bool private _initialized;
     /// @dev Gateway URL to use to perform offchain lookup.
     string private _url;
     /// @dev Addresses for the set of signers.
