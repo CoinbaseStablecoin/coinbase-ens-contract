@@ -1,4 +1,9 @@
-# Coinbase Offchain Resolver
+# ENS Offchain Resolver
+
+This repo was forked from
+[Coinbase](https://github.com/CoinbaseStablecoin/coinbase-ens-contract). The
+contract was renamed to `ENSResolver` to make it clear it is a generic ENS
+resolver and not specific to Coinbase names.
 
 ```
 Client                             Offchain Resolver Contract          Gateway
@@ -23,7 +28,7 @@ Client                             Offchain Resolver Contract          Gateway
 ```
 
 Please refer to the tests for `.resolve` and `.resolveWithProof` in
-`CoinbaseResolver.test.ts` to learn more about how this works.
+`ENSResolver.test.ts` to learn more about how this works.
 
 ## Requirements
 
